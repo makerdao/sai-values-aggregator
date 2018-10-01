@@ -8,7 +8,7 @@ contract SaiValuesAggregatorTest is DSTest {
     SaiValuesAggregator aggregator;
 
     function setUp() public {
-        aggregator = new SaiValuesAggregator();
+        aggregator = new SaiValuesAggregator(0x0000000000000000000000000000000000000000);
     }
 
     function testFail_basic_sanity() public {
