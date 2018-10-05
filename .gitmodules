@@ -7,3 +7,6 @@
 [submodule "lib/sai"]
 	path = lib/sai
 	url = https://github.com/makerdao/sai
+[submodule "lib/proxy-registry"]
+	path = lib/proxy-registry
+	url = https://github.com/makerdao/proxy-registry

@@ -76,6 +76,10 @@ contract TokInterface {
     function allowance(address, address) public view returns (uint);
 }
 
+contract ProxyRegInterface {
+    function proxies(address) public view returns (address);
+}
+
 contract SaiValuesAggregator is DSMath {
     TopInterface public top;
     TubInterface public tub;
@@ -105,34 +109,26 @@ contract SaiValuesAggregator is DSMath {
         sin = tub.sin();
     }
 
-    function getContractsAddrs() public view returns (
-                                                        uint blockNumber,
-                                                        address top_,
-                                                        address tub_,
-                                                        address tap_,
-                                                        address vox_,
-                                                        address pit_,
-                                                        address pip_,
-                                                        address pep_,
-                                                        address gem_,
-                                                        address gov_,
-                                                        address skr_,
-                                                        address sai_,
-                                                        address sin_
-                                                    ) {
+    function getContractsAddrs(address proxyRegistry, address myAddr) public view returns (
+                                                                                uint blockNumber,
+                                                                                address[] saiContracts,
+                                                                                address myProxy
+                                                                            ) {
         blockNumber = block.number;
-        top_ = top;
-        tub_ = tub;
-        tap_ = tap;
-        vox_ = vox;
-        pit_ = pit;
-        pip_ = pip;
-        pep_ = pep;
-        gem_ = gem;
-        gov_ = gov;
-        skr_ = skr;
-        sai_ = sai;
-        sin_ = sin;
+        saiContracts = new address[](12);
+        saiContracts[0] = top;
+        saiContracts[1] = tub;
+        saiContracts[2] = tap;
+        saiContracts[3] = vox;
+        saiContracts[4] = pit;
+        saiContracts[5] = pip;
+        saiContracts[6] = pep;
+        saiContracts[7] = gem;
+        saiContracts[8] = gov;
+        saiContracts[9] = skr;
+        saiContracts[10] = sai;
+        saiContracts[11] = sin;
+        myProxy = ProxyRegInterface(proxyRegistry).proxies(myAddr);
     }
 
     // Return the aggregated values from tub, vox and tap
@@ -177,30 +173,31 @@ contract SaiValuesAggregator is DSMath {
         sValues[15] = tap.fix(); // Cage price
         sValues[16] = tap.gap(); // Boom-Bust Spread
 
-        tValues = new uint[](19);
-        tValues[0] = gem.totalSupply();
-        tValues[1] = gem.balanceOf(myAddr);
-        tValues[2] = gem.balanceOf(tub);
-        tValues[3] = gem.balanceOf(tap);
+        tValues = new uint[](20);
+        tValues[0] = myAddr.balance;
+        tValues[1] = gem.totalSupply();
+        tValues[2] = gem.balanceOf(myAddr);
+        tValues[3] = gem.balanceOf(tub);
+        tValues[4] = gem.balanceOf(tap);
 
-        tValues[4] = gov.totalSupply();
-        tValues[5] = gov.balanceOf(myAddr);
-        tValues[6] = gov.balanceOf(pit);
-        tValues[7] = gov.allowance(myAddr, myProxy);
+        tValues[5] = gov.totalSupply();
+        tValues[6] = gov.balanceOf(myAddr);
+        tValues[7] = gov.balanceOf(pit);
+        tValues[8] = gov.allowance(myAddr, myProxy);
 
-        tValues[8] = skr.totalSupply();
-        tValues[9] = skr.balanceOf(myAddr);
-        tValues[10] = skr.balanceOf(tub);
-        tValues[11] = skr.balanceOf(tap);
+        tValues[9] = skr.totalSupply();
+        tValues[10] = skr.balanceOf(myAddr);
+        tValues[11] = skr.balanceOf(tub);
+        tValues[12] = skr.balanceOf(tap);
 
-        tValues[12] = sai.totalSupply();
-        tValues[13] = sai.balanceOf(myAddr);
-        tValues[14] = sai.balanceOf(tap);
-        tValues[15] = sai.allowance(myAddr, myProxy);
+        tValues[13] = sai.totalSupply();
+        tValues[14] = sai.balanceOf(myAddr);
+        tValues[15] = sai.balanceOf(tap);
+        tValues[16] = sai.allowance(myAddr, myProxy);
 
-        tValues[16] = sin.totalSupply();
-        tValues[17] = sin.balanceOf(tub);
-        tValues[18] = sin.balanceOf(tap);
+        tValues[17] = sin.totalSupply();
+        tValues[18] = sin.balanceOf(tub);
+        tValues[19] = sin.balanceOf(tap);
     }
 
     function aggregateCDPValues(bytes32 cup) public view returns (

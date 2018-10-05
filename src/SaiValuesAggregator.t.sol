@@ -2,15 +2,21 @@ pragma solidity ^0.4.24;
 
 import "sai/sai.t.sol";
 
+import "proxy-registry/ProxyRegistry.sol";
+
 import "./SaiValuesAggregator.sol";
 
 contract SaiValuesAggregatorTest is SaiTestBase {
     SaiValuesAggregator aggregator;
+    ProxyRegistry registry;
+    address myProxy;
+
 
     function setUp() public {
         super.setUp();
-        emit log_named_address('top', top);
         aggregator = new SaiValuesAggregator(top);
+        registry = new ProxyRegistry(new DSProxyFactory());
+        myProxy = registry.build();
     }
 
     function testSaiValuesAggregatorContracts() public {
@@ -29,34 +35,21 @@ contract SaiValuesAggregatorTest is SaiTestBase {
     }
 
     function testSaiValuesAggregatorGetContracts() public {
-        (
-            ,
-            address top2,
-            address tub2,
-            address tap2,
-            address vox2,
-            address pit2,
-            address pip2,
-            address pep2,
-            address gem2,
-            address gov2,
-            address skr2,
-            address sai2,
-            address sin2
-        ) = aggregator.getContractsAddrs();
+        (, address[] memory saiContracts, address myProxy2) = aggregator.getContractsAddrs(registry, this);
 
-        assertEq(top2, address(top));
-        assertEq(tub2, address(tub));
-        assertEq(tap2, address(tap));
-        assertEq(vox2, address(vox));
-        assertEq(pit2, address(pit));
-        assertEq(pip2, address(pip));
-        assertEq(pep2, address(pep));
-        assertEq(gem2, address(gem));
-        assertEq(gov2, address(gov));
-        assertEq(skr2, address(skr));
-        assertEq(sai2, address(sai));
-        assertEq(sin2, address(sin));
+        assertEq(saiContracts[0], address(top));
+        assertEq(saiContracts[1], address(tub));
+        assertEq(saiContracts[2], address(tap));
+        assertEq(saiContracts[3], address(vox));
+        assertEq(saiContracts[4], address(pit));
+        assertEq(saiContracts[5], address(pip));
+        assertEq(saiContracts[6], address(pep));
+        assertEq(saiContracts[7], address(gem));
+        assertEq(saiContracts[8], address(gov));
+        assertEq(saiContracts[9], address(skr));
+        assertEq(saiContracts[10], address(sai));
+        assertEq(saiContracts[11], address(sin));
+        assertEq(myProxy2, myProxy);
     }
 
     function testSaiValuesAggregatorGetAggregatedValues() public {
@@ -100,24 +93,25 @@ contract SaiValuesAggregatorTest is SaiTestBase {
         assertEq(sValues[15], tap.fix());
         assertEq(sValues[16], tap.gap());
 
-        assertEq(tValues[0], gem.totalSupply());
-        assertEq(tValues[1], gem.balanceOf(address(this)));
-        assertEq(tValues[2], gem.balanceOf(tub));
-        assertEq(tValues[3], gem.balanceOf(tap));
-        assertEq(tValues[4], gov.totalSupply());
-        assertEq(tValues[5], gov.balanceOf(address(this)));
-        assertEq(tValues[6], gov.balanceOf(pit));
-        assertEq(tValues[7], gov.allowance(address(this), address(0)));
-        assertEq(tValues[8], skr.totalSupply());
-        assertEq(tValues[9], skr.balanceOf(address(this)));
-        assertEq(tValues[10], skr.balanceOf(tub));
-        assertEq(tValues[11], skr.balanceOf(tap));
-        assertEq(tValues[12], sai.totalSupply());
-        assertEq(tValues[13], sai.balanceOf(address(this)));
-        assertEq(tValues[14], sai.balanceOf(tap));
-        assertEq(tValues[15], sai.allowance(address(this), address(0)));
-        assertEq(tValues[16], sin.totalSupply());
-        assertEq(tValues[17], sin.balanceOf(tub));
-        assertEq(tValues[18], sin.balanceOf(tap));
+        assertEq(tValues[0], address(this).balance);
+        assertEq(tValues[1], gem.totalSupply());
+        assertEq(tValues[2], gem.balanceOf(address(this)));
+        assertEq(tValues[3], gem.balanceOf(tub));
+        assertEq(tValues[4], gem.balanceOf(tap));
+        assertEq(tValues[5], gov.totalSupply());
+        assertEq(tValues[6], gov.balanceOf(address(this)));
+        assertEq(tValues[7], gov.balanceOf(pit));
+        assertEq(tValues[8], gov.allowance(address(this), address(0)));
+        assertEq(tValues[9], skr.totalSupply());
+        assertEq(tValues[10], skr.balanceOf(address(this)));
+        assertEq(tValues[11], skr.balanceOf(tub));
+        assertEq(tValues[12], skr.balanceOf(tap));
+        assertEq(tValues[13], sai.totalSupply());
+        assertEq(tValues[14], sai.balanceOf(address(this)));
+        assertEq(tValues[15], sai.balanceOf(tap));
+        assertEq(tValues[16], sai.allowance(address(this), address(0)));
+        assertEq(tValues[17], sin.totalSupply());
+        assertEq(tValues[18], sin.balanceOf(tub));
+        assertEq(tValues[19], sin.balanceOf(tap));
     }
 }
