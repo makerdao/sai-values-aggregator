@@ -217,7 +217,7 @@ contract SaiValuesAggregator is DSMath {
         (lad, r[0], r[1], r[2]) = tub.cups(cup);
         // r[0]: ink
         // r[1]: art
-        // r[2]: rhi
+        // r[2]: ire
         safe = tub.safe(cup);
 
         uint pro = rmul(tub.tag(), r[0]);
