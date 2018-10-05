@@ -76,6 +76,10 @@ contract TokInterface {
     function allowance(address, address) public view returns (uint);
 }
 
+contract ProxyInterface {
+    function owner() public view returns (address);
+}
+
 contract ProxyRegInterface {
     function proxies(address) public view returns (address);
 }
@@ -109,10 +113,10 @@ contract SaiValuesAggregator is DSMath {
         sin = tub.sin();
     }
 
-    function getContractsAddrs(address proxyRegistry, address myAddr) public view returns (
+    function getContractsAddrs(address proxyRegistry, address addr) public view returns (
                                                                                 uint blockNumber,
                                                                                 address[] saiContracts,
-                                                                                address myProxy
+                                                                                address proxy
                                                                             ) {
         blockNumber = block.number;
         saiContracts = new address[](12);
@@ -128,11 +132,12 @@ contract SaiValuesAggregator is DSMath {
         saiContracts[9] = skr;
         saiContracts[10] = sai;
         saiContracts[11] = sin;
-        myProxy = ProxyRegInterface(proxyRegistry).proxies(myAddr);
+        proxy = ProxyRegInterface(proxyRegistry).proxies(addr);
+        proxy = ProxyInterface(proxy).owner() == addr ? proxy : address(0);
     }
 
     // Return the aggregated values from tub, vox and tap
-    function aggregateValues(address myAddr, address myProxy) public view returns (
+    function aggregateValues(address addr, address proxy) public view returns (
                                                         uint blockNumber,
                                                         bytes32 pipVal,
                                                         bool pipSet,
@@ -174,26 +179,26 @@ contract SaiValuesAggregator is DSMath {
         sValues[16] = tap.gap(); // Boom-Bust Spread
 
         tValues = new uint[](20);
-        tValues[0] = myAddr.balance;
+        tValues[0] = addr.balance;
         tValues[1] = gem.totalSupply();
-        tValues[2] = gem.balanceOf(myAddr);
+        tValues[2] = gem.balanceOf(addr);
         tValues[3] = gem.balanceOf(tub);
         tValues[4] = gem.balanceOf(tap);
 
         tValues[5] = gov.totalSupply();
-        tValues[6] = gov.balanceOf(myAddr);
+        tValues[6] = gov.balanceOf(addr);
         tValues[7] = gov.balanceOf(pit);
-        tValues[8] = gov.allowance(myAddr, myProxy);
+        tValues[8] = gov.allowance(addr, proxy);
 
         tValues[9] = skr.totalSupply();
-        tValues[10] = skr.balanceOf(myAddr);
+        tValues[10] = skr.balanceOf(addr);
         tValues[11] = skr.balanceOf(tub);
         tValues[12] = skr.balanceOf(tap);
 
         tValues[13] = sai.totalSupply();
-        tValues[14] = sai.balanceOf(myAddr);
+        tValues[14] = sai.balanceOf(addr);
         tValues[15] = sai.balanceOf(tap);
-        tValues[16] = sai.allowance(myAddr, myProxy);
+        tValues[16] = sai.allowance(addr, proxy);
 
         tValues[17] = sin.totalSupply();
         tValues[18] = sin.balanceOf(tub);

@@ -9,14 +9,14 @@ import "./SaiValuesAggregator.sol";
 contract SaiValuesAggregatorTest is SaiTestBase {
     SaiValuesAggregator aggregator;
     ProxyRegistry registry;
-    address myProxy;
+    address proxy;
 
 
     function setUp() public {
         super.setUp();
         aggregator = new SaiValuesAggregator(top);
         registry = new ProxyRegistry(new DSProxyFactory());
-        myProxy = registry.build();
+        proxy = registry.build();
     }
 
     function testSaiValuesAggregatorContracts() public {
@@ -35,7 +35,7 @@ contract SaiValuesAggregatorTest is SaiTestBase {
     }
 
     function testSaiValuesAggregatorGetContracts() public {
-        (, address[] memory saiContracts, address myProxy2) = aggregator.getContractsAddrs(registry, this);
+        (, address[] memory saiContracts, address proxy2) = aggregator.getContractsAddrs(registry, this);
 
         assertEq(saiContracts[0], address(top));
         assertEq(saiContracts[1], address(tub));
@@ -49,7 +49,7 @@ contract SaiValuesAggregatorTest is SaiTestBase {
         assertEq(saiContracts[9], address(skr));
         assertEq(saiContracts[10], address(sai));
         assertEq(saiContracts[11], address(sin));
-        assertEq(myProxy2, myProxy);
+        assertEq(proxy2, proxy);
     }
 
     function testSaiValuesAggregatorGetAggregatedValues() public {
