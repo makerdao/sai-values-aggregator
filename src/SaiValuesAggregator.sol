@@ -214,24 +214,55 @@ contract SaiValuesAggregator is DSMath {
         blockNumber = block.number;
 
         r = new uint[](8);
-        (lad, r[0], r[1], r[2]) = tub.cups(cup);
+
         // r[0]: ink
         // r[1]: art
         // r[2]: ire
-        safe = tub.safe(cup);
+        (lad, r[0], r[1], r[2]) = tub.cups(cup);
+        if (lad != address(0)) {
+            safe = tub.safe(cup);
 
-        uint pro = rmul(tub.tag(), r[0]);
-        r[3] = wdiv(pro, rmul(vox.par(), tub.tab(cup)));
-        // r[3]: ratio
+            uint pro = rmul(tub.tag(), r[0]);
+            // r[3]: ratio
+            r[3] = vox.par() > 0 && tub.tab(cup) > 0 ? wdiv(pro, rmul(vox.par(), tub.tab(cup))) : 0;
 
-        r[4] = safe ? sub(rdiv(pro, rmul(tub.mat(), vox.par())), tub.tab(cup)) : 0;
-        // r[4]: availDAI
-        uint minSKRNeeded = rdiv(rmul(rmul(tub.tab(cup), tub.mat()), vox.par()), tub.tag());
-        r[5] = safe ? sub(r[0], minSKRNeeded > 0.005 ether ? minSKRNeeded : 0.005 ether) : 0;
-        // r[5]: availSKR
-        r[6] = rmul(r[5], tub.per());
-        // r[6]: availETH
-        r[7] = r[0] > 0 && r[1] > 0 ? wdiv(rdiv(rmul(tub.tab(cup), tub.mat()), tub.per()), r[0]) : 0;
-        // r[7]: liqPrice
+            // r[4]: availDAI
+            r[4] = safe && tub.mat() > 0 && vox.par() > 0
+            ?
+                sub(rdiv(pro, rmul(tub.mat(), vox.par())), tub.tab(cup))
+            :
+                0; // If not safe DAI can not be drawn
+
+            uint minSKRNeeded = tub.tag() > 0
+            ?
+                rdiv(rmul(rmul(tub.tab(cup), tub.mat()), vox.par()), tub.tag())
+            :
+                0; // If there is not feed price, minSKR can not be calculated
+
+            // r[5]: availSKR
+            r[5] = safe
+            ?
+                r[1] > 0
+                ?
+                    minSKRNeeded > 0
+                    ?
+                        sub(r[0], minSKRNeeded > 0.005 ether ? minSKRNeeded : 0.005 ether)
+                    :
+                        0 // If minSKR can not be calculated, availSKR either
+                :
+                    r[0] // If no debt the available SKR is all the amount locked
+            :
+                0; // If not safe, there is not SKR to free
+
+            // r[6]: availETH
+            r[6] = rmul(r[5], tub.per());
+
+            // r[7]: liqPrice
+            r[7] = r[0] > 0 && tub.tab(cup) > 0
+            ?
+                wdiv(rdiv(rmul(tub.tab(cup), tub.mat()), tub.per()), r[0])
+            :
+                0; // If there is not SKR locked or debt, liqPrice can not be calculated
+        }
     }
 }
