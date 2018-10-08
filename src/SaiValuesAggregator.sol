@@ -143,8 +143,7 @@ contract SaiValuesAggregator is DSMath {
                                                         bool pipSet,
                                                         bytes32 pepVal,
                                                         bool pepSet,
-                                                        bool off,
-                                                        bool out,
+                                                        bool[] sStatus, // System status
                                                         uint[] sValues, // System Values
                                                         uint[] tValues // Token Values
                                                     ) {
@@ -153,10 +152,14 @@ contract SaiValuesAggregator is DSMath {
         (pipVal, pipSet) = pip.peek(); // Price feed value for gem
         (pepVal, pepSet) = pep.peek(); // Price feed value for gov
 
-        off = tub.off(); // Cage flag
-        out = tub.out(); // Post cage exit
+        sStatus = new bool[](4);
+        sStatus[0] = tub.off(); // off: Cage flag
+        sStatus[1] = tub.out(); // out: Post cage exit
+        uint pro = rmul(skr.balanceOf(tub), tub.tag());
+        sStatus[2] = pro < sin.totalSupply(); // eek: deficit
+        sStatus[3] = pro >= rmul(sin.totalSupply(), tub.mat()); // safe
 
-        sValues = new uint[](17);
+        sValues = new uint[](19);
         // Tub
         sValues[0] = tub.axe(); // Liquidation penalty
         sValues[1] = tub.mat(); // Liquidation ratio

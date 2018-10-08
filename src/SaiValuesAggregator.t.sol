@@ -59,8 +59,7 @@ contract SaiValuesAggregatorTest is SaiTestBase {
             bool pipSet,
             bytes32 pepVal,
             bool pepSet,
-            bool off,
-            bool out,
+            bool[] memory sStatus,
             uint[] memory sValues,
             uint[] memory tValues
         ) = aggregator.aggregateValues(address(this), address(0));
@@ -72,8 +71,11 @@ contract SaiValuesAggregatorTest is SaiTestBase {
         assertEq(pepVal, pepVal2);
         assertTrue(pepSet == pepSet2);
 
-        assertTrue(off == tub.off());
-        assertTrue(out == tub.out());
+        assertTrue(sStatus[0] == tub.off());
+        assertTrue(sStatus[1] == tub.out());
+
+        assertTrue(!sStatus[2]);
+        assertTrue(sStatus[3]);
 
         assertEq(sValues[0], tub.axe());
         assertEq(sValues[1], tub.mat());
