@@ -133,7 +133,7 @@ contract SaiValuesAggregator is DSMath {
         saiContracts[10] = sai;
         saiContracts[11] = sin;
         proxy = ProxyRegInterface(proxyRegistry).proxies(addr);
-        proxy = ProxyInterface(proxy).owner() == addr ? proxy : address(0);
+        proxy = proxy != address(0) && ProxyInterface(proxy).owner() == addr ? proxy : address(0);
     }
 
     // Return the aggregated values from tub, vox and tap

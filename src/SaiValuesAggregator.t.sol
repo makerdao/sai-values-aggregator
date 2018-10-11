@@ -52,6 +52,12 @@ contract SaiValuesAggregatorTest is SaiTestBase {
         assertEq(proxy2, proxy);
     }
 
+    function testSaiValuesAggregatorGetContractsNoProxy() public {
+        (,, address proxy2) = aggregator.getContractsAddrs(registry, address(1234));
+
+        assertEq(proxy2, address(0));
+    }
+
     function testSaiValuesAggregatorGetAggregatedValues() public {
         (
             ,
