@@ -18,15 +18,15 @@ pragma solidity ^0.4.24;
 import "ds-math/math.sol";
 
 contract TopInterface {
-    function tub() public view returns (TubInterface);
-    function tap() public view returns (TapInterface);
+    function tub() public view returns (address);
+    function tap() public view returns (address);
 }
 
 contract TubInterface {
-    function vox() public view returns (VoxInterface);
+    function vox() public view returns (address);
     function pit() public view returns (address);
-    function pip() public view returns (PipInterface);
-    function pep() public view returns (PepInterface);
+    function pip() public view returns (address);
+    function pep() public view returns (address);
     function mat() public view returns (uint);
     function chi() public view returns (uint);
     function per() public view returns (uint);
@@ -41,11 +41,11 @@ contract TubInterface {
     function rhi() public view returns (uint);
     function off() public view returns (bool);
     function out() public view returns (bool);
-    function gem() public view returns (TokInterface);
-    function gov() public view returns (TokInterface);
-    function skr() public view returns (TokInterface);
-    function sai() public view returns (TokInterface);
-    function sin() public view returns (TokInterface);
+    function gem() public view returns (address);
+    function gov() public view returns (address);
+    function skr() public view returns (address);
+    function sai() public view returns (address);
+    function sin() public view returns (address);
     function cups(bytes32) public view returns (address, uint, uint, uint);
     function tab(bytes32) public view returns (uint);
     function safe(bytes32) public view returns (bool);
@@ -66,10 +66,6 @@ contract PipInterface {
     function peek() public view returns (bytes32, bool);
 }
 
-contract PepInterface {
-    function peek() public view returns (bytes32, bool);
-}
-
 contract TokInterface {
     function totalSupply() public view returns (uint);
     function balanceOf(address) public view returns (uint);
@@ -85,32 +81,54 @@ contract ProxyRegInterface {
 }
 
 contract SaiValuesAggregator is DSMath {
-    TopInterface public top;
-    TubInterface public tub;
-    TapInterface public tap;
-    VoxInterface public vox;
-    address      public pit;
-    PipInterface public pip;
-    PepInterface public pep;
-    TokInterface public gem;
-    TokInterface public gov;
-    TokInterface public skr;
-    TokInterface public sai;
-    TokInterface public sin;
+    address public top;
 
     constructor(address _top) public {
-        top = TopInterface(_top);
-        tub = top.tub();
-        tap = top.tap();
-        vox = tub.vox();
-        pit = tub.pit();
-        pip = tub.pip();
-        pep = tub.pep();
-        gem = tub.gem();
-        gov = tub.gov();
-        skr = tub.skr();
-        sai = tub.sai();
-        sin = tub.sin();
+        top = _top;
+    }
+
+    function tub() public view returns (address) {
+        return TopInterface(top).tub();
+    }
+
+    function tap() public view returns (address) {
+        return TopInterface(top).tap();
+    }
+
+    function vox() public view returns (address) {
+        return TubInterface(tub()).vox();
+    }
+
+    function pit() public view returns (address) {
+        return TubInterface(tub()).pit();
+    }
+
+    function pip() public view returns (address) {
+        return TubInterface(tub()).pip();
+    }
+
+    function pep() public view returns (address) {
+        return TubInterface(tub()).pep();
+    }
+
+    function gem() public view returns (address) {
+        return TubInterface(tub()).gem();
+    }
+
+    function gov() public view returns (address) {
+        return TubInterface(tub()).gov();
+    }
+
+    function skr() public view returns (address) {
+        return TubInterface(tub()).skr();
+    }
+
+    function sai() public view returns (address) {
+        return TubInterface(tub()).sai();
+    }
+
+    function sin() public view returns (address) {
+        return TubInterface(tub()).sin();
     }
 
     function getContractsAddrs(address proxyRegistry, address addr) public view returns (
@@ -121,17 +139,17 @@ contract SaiValuesAggregator is DSMath {
         blockNumber = block.number;
         saiContracts = new address[](12);
         saiContracts[0] = top;
-        saiContracts[1] = tub;
-        saiContracts[2] = tap;
-        saiContracts[3] = vox;
-        saiContracts[4] = pit;
-        saiContracts[5] = pip;
-        saiContracts[6] = pep;
-        saiContracts[7] = gem;
-        saiContracts[8] = gov;
-        saiContracts[9] = skr;
-        saiContracts[10] = sai;
-        saiContracts[11] = sin;
+        saiContracts[1] = tub();
+        saiContracts[2] = tap();
+        saiContracts[3] = vox();
+        saiContracts[4] = pit();
+        saiContracts[5] = pip();
+        saiContracts[6] = pep();
+        saiContracts[7] = gem();
+        saiContracts[8] = gov();
+        saiContracts[9] = skr();
+        saiContracts[10] = sai();
+        saiContracts[11] = sin();
         proxy = ProxyRegInterface(proxyRegistry).proxies(addr);
         proxy = proxy != address(0) && ProxyInterface(proxy).owner() == addr ? proxy : address(0);
     }
@@ -149,63 +167,63 @@ contract SaiValuesAggregator is DSMath {
                                                     ) {
         blockNumber = block.number;
 
-        (pipVal, pipSet) = pip.peek(); // Price feed value for gem
-        (pepVal, pepSet) = pep.peek(); // Price feed value for gov
+        (pipVal, pipSet) = PipInterface(pip()).peek(); // Price feed value for gem
+        (pepVal, pepSet) = PipInterface(pep()).peek(); // Price feed value for gov
 
         sStatus = new bool[](4);
-        sStatus[0] = tub.off(); // off: Cage flag
-        sStatus[1] = tub.out(); // out: Post cage exit
-        uint pro = rmul(skr.balanceOf(tub), tub.tag());
-        sStatus[2] = pro < sin.totalSupply(); // eek: deficit
-        sStatus[3] = pro >= rmul(sin.totalSupply(), tub.mat()); // safe
+        sStatus[0] = TubInterface(tub()).off(); // off: Cage flag
+        sStatus[1] = TubInterface(tub()).out(); // out: Post cage exit
+        uint pro = rmul(TokInterface(skr()).balanceOf(tub()), TubInterface(tub()).tag());
+        sStatus[2] = pro < TokInterface(sin()).totalSupply(); // eek: deficit
+        sStatus[3] = pro >= rmul(TokInterface(sin()).totalSupply(), TubInterface(tub()).mat()); // safe
 
         sValues = new uint[](19);
         // Tub
-        sValues[0] = tub.axe(); // Liquidation penalty
-        sValues[1] = tub.mat(); // Liquidation ratio
-        sValues[2] = tub.cap(); // Debt ceiling
-        sValues[3] = tub.fit(); // REF per SKR (just before settlement)
-        sValues[4] = tub.tax(); // Stability fee
-        sValues[5] = tub.fee(); // Governance fee
-        sValues[6] = tub.chi(); // Accumulated Tax Rates
-        sValues[7] = tub.rhi(); // Accumulated Tax + Fee Rates
-        sValues[8] = tub.rho(); // Time of last drip
-        sValues[9] = tub.gap(); // Join-Exit Spread
-        sValues[10] = tub.tag(); // Abstracted collateral price (ref per skr)
-        sValues[11] = tub.per(); // Wrapper ratio (gem per skr)
+        sValues[0] = TubInterface(tub()).axe(); // Liquidation penalty
+        sValues[1] = TubInterface(tub()).mat(); // Liquidation ratio
+        sValues[2] = TubInterface(tub()).cap(); // Debt ceiling
+        sValues[3] = TubInterface(tub()).fit(); // REF per SKR (just before settlement)
+        sValues[4] = TubInterface(tub()).tax(); // Stability fee
+        sValues[5] = TubInterface(tub()).fee(); // Governance fee
+        sValues[6] = TubInterface(tub()).chi(); // Accumulated Tax Rates
+        sValues[7] = TubInterface(tub()).rhi(); // Accumulated Tax + Fee Rates
+        sValues[8] = TubInterface(tub()).rho(); // Time of last drip
+        sValues[9] = TubInterface(tub()).gap(); // Join-Exit Spread
+        sValues[10] = TubInterface(tub()).tag(); // Abstracted collateral price (ref per skr)
+        sValues[11] = TubInterface(tub()).per(); // Wrapper ratio (gem per skr)
         // Vox
-        sValues[12] = vox.par(); // Dai Target Price (ref per dai)
-        sValues[13] = vox.way(); // The holder fee (interest rate)
-        sValues[14] = vox.era();
+        sValues[12] = VoxInterface(vox()).par(); // Dai Target Price (ref per dai)
+        sValues[13] = VoxInterface(vox()).way(); // The holder fee (interest rate)
+        sValues[14] = VoxInterface(vox()).era();
         // Tap
-        sValues[15] = tap.fix(); // Cage price
-        sValues[16] = tap.gap(); // Boom-Bust Spread
+        sValues[15] = TapInterface(tap()).fix(); // Cage price
+        sValues[16] = TapInterface(tap()).gap(); // Boom-Bust Spread
 
         tValues = new uint[](20);
         tValues[0] = addr.balance;
-        tValues[1] = gem.totalSupply();
-        tValues[2] = gem.balanceOf(addr);
-        tValues[3] = gem.balanceOf(tub);
-        tValues[4] = gem.balanceOf(tap);
+        tValues[1] = TokInterface(gem()).totalSupply();
+        tValues[2] = TokInterface(gem()).balanceOf(addr);
+        tValues[3] = TokInterface(gem()).balanceOf(tub());
+        tValues[4] = TokInterface(gem()).balanceOf(tap());
 
-        tValues[5] = gov.totalSupply();
-        tValues[6] = gov.balanceOf(addr);
-        tValues[7] = gov.balanceOf(pit);
-        tValues[8] = gov.allowance(addr, proxy);
+        tValues[5] = TokInterface(gov()).totalSupply();
+        tValues[6] = TokInterface(gov()).balanceOf(addr);
+        tValues[7] = TokInterface(gov()).balanceOf(pit());
+        tValues[8] = TokInterface(gov()).allowance(addr, proxy);
 
-        tValues[9] = skr.totalSupply();
-        tValues[10] = skr.balanceOf(addr);
-        tValues[11] = skr.balanceOf(tub);
-        tValues[12] = skr.balanceOf(tap);
+        tValues[9] = TokInterface(skr()).totalSupply();
+        tValues[10] = TokInterface(skr()).balanceOf(addr);
+        tValues[11] = TokInterface(skr()).balanceOf(tub());
+        tValues[12] = TokInterface(skr()).balanceOf(tap());
 
-        tValues[13] = sai.totalSupply();
-        tValues[14] = sai.balanceOf(addr);
-        tValues[15] = sai.balanceOf(tap);
-        tValues[16] = sai.allowance(addr, proxy);
+        tValues[13] = TokInterface(sai()).totalSupply();
+        tValues[14] = TokInterface(sai()).balanceOf(addr);
+        tValues[15] = TokInterface(sai()).balanceOf(tap());
+        tValues[16] = TokInterface(sai()).allowance(addr, proxy);
 
-        tValues[17] = sin.totalSupply();
-        tValues[18] = sin.balanceOf(tub);
-        tValues[19] = sin.balanceOf(tap);
+        tValues[17] = TokInterface(sin()).totalSupply();
+        tValues[18] = TokInterface(sin()).balanceOf(tub());
+        tValues[19] = TokInterface(sin()).balanceOf(tap());
     }
 
     function aggregateCDPValues(bytes32 cup) public view returns (
@@ -221,24 +239,24 @@ contract SaiValuesAggregator is DSMath {
         // r[0]: ink
         // r[1]: art
         // r[2]: ire
-        (lad, r[0], r[1], r[2]) = tub.cups(cup);
+        (lad, r[0], r[1], r[2]) = TubInterface(tub()).cups(cup);
         if (lad != address(0)) {
-            safe = tub.safe(cup);
+            safe = TubInterface(tub()).safe(cup);
 
-            uint pro = rmul(tub.tag(), r[0]);
+            uint pro = rmul(TubInterface(tub()).tag(), r[0]);
             // r[3]: ratio
-            r[3] = vox.par() > 0 && tub.tab(cup) > 0 ? wdiv(pro, rmul(vox.par(), tub.tab(cup))) : 0;
+            r[3] = VoxInterface(vox()).par() > 0 && TubInterface(tub()).tab(cup) > 0 ? wdiv(pro, rmul(VoxInterface(vox()).par(), TubInterface(tub()).tab(cup))) : 0;
 
             // r[4]: availDAI
-            r[4] = safe && tub.mat() > 0 && vox.par() > 0
+            r[4] = safe && TubInterface(tub()).mat() > 0 && VoxInterface(vox()).par() > 0
             ?
-                sub(rdiv(pro, rmul(tub.mat(), vox.par())), tub.tab(cup))
+                sub(rdiv(pro, rmul(TubInterface(tub()).mat(), VoxInterface(vox()).par())), TubInterface(tub()).tab(cup))
             :
                 0; // If not safe DAI can not be drawn
 
-            uint minSKRNeeded = tub.tag() > 0
+            uint minSKRNeeded = TubInterface(tub()).tag() > 0
             ?
-                rdiv(rmul(rmul(tub.tab(cup), tub.mat()), vox.par()), tub.tag())
+                rdiv(rmul(rmul(TubInterface(tub()).tab(cup), TubInterface(tub()).mat()), VoxInterface(vox()).par()), TubInterface(tub()).tag())
             :
                 0; // If there is not feed price, minSKR can not be calculated
 
@@ -258,12 +276,12 @@ contract SaiValuesAggregator is DSMath {
                 0; // If not safe, there is not SKR to free
 
             // r[6]: availETH
-            r[6] = rmul(r[5], tub.per());
+            r[6] = rmul(r[5], TubInterface(tub()).per());
 
             // r[7]: liqPrice
-            r[7] = r[0] > 0 && tub.tab(cup) > 0
+            r[7] = r[0] > 0 && TubInterface(tub()).tab(cup) > 0
             ?
-                wdiv(rdiv(rmul(tub.tab(cup), tub.mat()), tub.per()), r[0])
+                wdiv(rdiv(rmul(TubInterface(tub()).tab(cup), TubInterface(tub()).mat()), TubInterface(tub()).per()), r[0])
             :
                 0; // If there is not SKR locked or debt, liqPrice can not be calculated
         }
